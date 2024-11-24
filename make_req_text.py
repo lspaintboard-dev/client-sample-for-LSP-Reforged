@@ -2,12 +2,14 @@ import random
 
 endpoint = ""
 
-async def int2str(x:int)->str:
+async def int2str(x:int,dig:int)->str:
     text:str = ""
     num:list[int] = []
     while(x):
         num.append(x%256)
         x = x//256
+    for _ in range(len(num),dig):
+        text+="\x00"
     for each in reversed(num):
         text+=chr(each)
     return text
