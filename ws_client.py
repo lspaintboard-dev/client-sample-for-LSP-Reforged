@@ -3,25 +3,38 @@ import websockets
 import random
 
 import lib as mr
+import config as cg
 
 resp:dict[int,str] = {}
 
-async def send_pt(ws_c):
+data_all = []
+
+async def mk_req():
     # 这是一个向全版随机 #39C5BB 的 sample
     while True:
         try:
-            x=random.randint(0,1000)
-            y=random.randint(0,600)
-            id,data = await mr.paint(x,y,(0x39,0xc5,0xbb),710036,"2f78a537-55ae-414a-8c76-1f679dbdafd0")
-            await ws_c.send(bytes(data))
-            await asyncio.sleep(0.01)
+            for tk in cg.token_list:
+                x=random.randint(0,999)
+                y=random.randint(0,599)
+                id,data = await mr.paint(x,y,(0x39,0xc5,0xbb),710036,tk)
+                global data_all
+                data_all += data
+                await asyncio.sleep(0.0001)
         except Exception as ex:
             print(str(ex))
 
+async def send_req(ws_c):
+    global data_all
+    while True:
+        if len(data_all) != 0:
+            print(len(data_all))
+            await ws_c.send(bytes(data_all))
+            data_all.clear()
+        await asyncio.sleep(cg.cd_req)
 
 async def connect(url:str):
     async with websockets.connect(url) as ws_c:
-        asyncio.gather(send_pt(ws_c))
+        asyncio.gather(mk_req(),send_req(ws_c))
         while True:
             res = await ws_c.recv()
             unp = await mr.unpack(res)
